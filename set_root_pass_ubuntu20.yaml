@@ -1,0 +1,23 @@
+- hosts: webserver  (Created by https://github.com/Itsmide)
+  remote_user: root
+  become: True
+  vars_files:
+    - ubuntu20
+
+  tasks:
+
+  - name: Change the authentication plugin of MySQL root user to mysql_native_password
+    shell: mysql -u root -e 'UPDATE mysql.user SET plugin="mysql_native_password" WHERE user="root" AND host="localhost"'
+
+  - name: Flush Privileges  (Created by https://github.com/Itsmide)
+    shell: mysql -u root -e 'FLUSH PRIVILEGES'
+
+  - name: Set MySQL root password  (Created by https://github.com/Itsmide)
+    mysql_user:
+      login_host: 'localhost'
+      login_user: 'root'
+      login_password: ''
+      name: 'root'
+      password: '{{ mysql_pass }}'
+      state: present
+

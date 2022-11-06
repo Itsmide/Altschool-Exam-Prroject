@@ -1,0 +1,195 @@
+---
+- name: Setup Database Server  (Created by https://github.com/Itsmide)
+  hosts: database
+  become: yes
+  remote_user: root
+  vars_files:
+    - ubuntu20
+  tasks:
+
+  - name: set timezone to Africa/Lagos
+    timezone:
+      name: Africa/Lagos
+
+  - name: create database  (Created by https://github.com/Itsmide)
+    mysql_db:
+      name: AltSchoo1DB
+      login_host: localhost
+      login_user: root
+      login_password: '{{ mysql_pass }}'
+      state: present
+
+  - name: create user
+    mysql_user:
+      name: alt_examiner
+      password: AltschoolAfrica
+      priv: "Altschoo108.*:ALL"
+      login_host: localhost
+      login_user: root
+      login_password: '{{ mysql_pass }}'
+      host: "%"
+      state: present
+
+  - name: Remove the test database  (Created by https://github.com/Itsmide)
+    mysql_db:
+      name: test
+      login_host: localhost
+      login_user: root
+      login_password: '{{ mysql_pass }}'
+      state: absent
+
+  - name: Install Ansible  (Created by https://github.com/Itsmide)
+    apt:
+      name: ansible 
+      state: present
+
+  - name: Cloning Laravel Repo  (Created by https://github.com/Itsmide)
+    git: >
+      dest=/root/myapp
+      repo=https://github.com/flamy/laravel-realworld-example-app.git
+      update=no
+
+  - name: Changing Directory
+    shell: cd /root/myapp
+
+  - name: Install Composer in Directory
+    shell: ansible-galaxy install geerlingguy.composer
+
+  - name: More composer Installation
+    command: php -r "if (hash_file('SHA384', '/usr/local/bin/composer.php') === 'e115a8dc7871f15d853148a7fbac7da27d6c0030b848d9b3dc09e2a0388afed865e6a3d6b3c0fad45c48e2b5fc1196ae') { echo 'Installer verified';}"
+
+  - name: Changing Directory
+    shell: cd /root
+
+  - name: Moving myapp to /var/www/html  (Created by https://github.com/Itsmide)
+    shell: mv myapp /var/www/html/
+
+  - name: Changing Directory to /var/www/html/myapp
+    shell: cd /var/www/html/myapp
+
+  - name: Download and install all requirements for Directory (Composer)
+    composer:
+      command: install
+      working_dir: /var/www/html/myapp
+    environment:
+      COMPOSER_ALLOW_SUPERUSER: "1"
+      COMPOSER_NO_INTERACTION: "1"
+
+  - name: Changing File's Ownership to www-data  (Created by https://github.com/Itsmide)
+    shell: chown -R www-data:www-data /var/www/html/myapp
+
+  - name: Changing Directory's Permission
+    shell: chmod -R 775 /var/www/html/myapp/storage
+
+  - name: Changing .env.example to .env file
+    shell: mv /var/www/html/myapp/.env.example /var/www/html/myapp/.env
+
+  - name: Create an apache virtual host configuration file
+    ansible.builtin.copy:
+      dest: /var/www/html/myapp/.env
+      content: |
+        APP_NAME="myapp"
+        APP_ENV=local
+        APP_KEY=
+        APP_DEBUG=true
+        APP_URL=http://178.128.237.245
+        APP_PORT=3000
+
+        LOG_CHANNEL stack
+        LOG_DEPRECATIONS_CHANNEL=null
+        LOG_LEVEL=debug
+
+        DB_CONNECTION=mysql
+        DB_HOST=localhost
+        DB_PORT=3306 
+        DB_DATABASE=A1tSchoolDB
+        DB_USERNAME=root
+        DB_PASSWORD=Asdfghjk1@100
+
+        BROADCAST_DRIVER=10g
+        CACHE_DRIVER=file
+        FILESYSTEM_DISK=local
+        QUEUE_CONNECTION=sync 
+        SESSION_DRIVER=file
+        SESSION_LIFETIME=120
+
+        MEMCACHED_HOST=127.0.0.1
+
+        REDIS_HOST=127.0.0.1
+        REDIS_PASSWORD=null
+        REDIS_PORT=6379
+
+        MAIL_MAILER=smtp
+        MAIL_HOST=mailhog
+        MAIL_PORT=1025
+        MAIL_USERNAME=null
+        MAIL_PASSWORD=null
+        MAIL_ENCRYPTION=null
+        MAIL_FROM_ADDRESS="hello@example.com"
+        MAIL_FROM_NAME="${APP_NAME}"
+
+        AWS_ACCESS_KEY_ID=
+        AWS_SECRET_ACCESS_KEY=
+        AWS_DEFAULT_REGION-us-east-1
+        AWS_BUCKET=
+        AWS_USE_PATH_STYLE_ENDPOINT=false
+
+        AWS_ACCESS_KEY_ID=
+        AWS SECRET_ACCESS_KEY= 
+        AWS_DEFAULT_REGION=us-east-1
+        AWS_BUCKET=
+        AWS_USE_PATH_STYLE_ENDPOINT=false
+
+        PUSHER_APP_ID=
+        PUSHER_APP_KEY= 
+        PUSHER_APP_SECRET=
+        PUSHER_APP_CLUSTER=mt1
+
+        MIX_PUSHER_APP_KEY="${PUSHER_APP_KEY]"
+        MIX_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
+
+        L5_SWAGGER_GENERATE_ALWAYS=true
+        SAIL_XDEBUG_MODE=develop,debug
+        SAIL_SKIP_CHECKS=true
+
+  - name: Run the php artisan .... command  (Created by https://github.com/Itsmide)
+    shell: php /var/www/html/myapp/artisan key:generate
+    become_user: www-data
+    become: yes
+
+  - name: Run the php artisan .... command
+    shell: php /var/www/html/myapp/artisan migrate --force
+    become: yes
+    become_user: www-data
+
+  - name: Changing to Routes Directory
+    shell: cd /var/www/html/myapp/routes
+
+  - name: Create the web.php file in the routes directory
+    ansible.builtin.copy:
+      dest: /var/www/html/myapp/routes/web.php
+      content: |
+        <?php
+
+        Route::get('/', function () {
+            return view('welcome');
+        });
+
+  - name: Changing Directory to /etc/apache2/sites-available  (Created by https://github.com/Itsmide)
+    shell: cd /etc/apache2/sites-available
+
+  - name: Create an apache virtual host configuration file  (Created by https://github.com/Itsmide)
+    ansible.builtin.copy:
+    dest: /etc/apache2/sites-available/laravel.conf
+    content: |
+      <VirtualHost *:80>
+              ServerAdmin webmaster@178.128.237.245
+              ServerName 178.128.237.245
+              DocumentRoot /var/www/html/myapp/public 
+              <Directory /var/www/html/myapp/>
+                      AllowOverride All
+                      Require all granted
+              </Directory>
+              ErrorLog ${APACHE_LOG_DIR}/error.log
+              CustomLog ${APACHE_LOG_DIR}/access.log combined
+      </VirtualHost>

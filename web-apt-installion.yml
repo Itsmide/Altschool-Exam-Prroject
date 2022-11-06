@@ -1,0 +1,98 @@
+---
+- name: Setup Webserver (Created by https://github.com/Itsmide)
+  hosts: webserver
+  become: yes
+  remote_user: root
+
+  tasks:
+
+  - name: Install Apache Server (Created by https://github.com/Itsmide)
+    apt:
+      name: apache2
+      state: present
+
+  - name: Install SURY PPA
+    apt:
+      name:
+        - lsb-release
+        - ca-certificates
+        - apt-transport-https
+        - software-properties-common
+        - gnupg2
+      state: present
+
+  - name: Adding PPA to the server packages
+    shell: echo "deb https://packages.sury.org/php/ $(1sb_release -sc) main" | sudo tee /etc/apt/sources.list.d/sury-php.list
+
+  - name: More tools on SURY PPA for php8.1
+    get_url: url=https://packages.sury.org/php/apt.gpg dest=/etc/apt/trusted.gpg.d/sury-keyring.gpg
+
+  - name: Install php8.1 and php extension  (Created by https://github.com/Itsmide)
+    apt:
+      name:
+        - php
+        - libapache2-mod-php
+        - php8.1-mysql
+        - php8.1-common
+        - php8.1-mysql
+        - php8.1-xml
+        - php8.1-xmlrpc
+        - php8.1-curl
+        - php8.1-gd
+        - php8.1-imagick
+        - php8.1-cli
+        - php8.1-dev
+        - php8.1-imap
+        - php8.1-mbstring
+        - php8.1-opcache
+        - php8.1-soap
+        - php8.1-zip
+        - php8.1-intl
+      state: latest
+
+  - name: Install Git
+    apt:
+      name: git
+      state: present
+
+  - name: Git Configuration
+    shell: git config --global user.name "Itsmide"
+
+  - name: More Git Configuration
+    shell: git config --global user.email "Ayomidex100@gmail.com"
+
+  - name: install composer  (Created by https://github.com/Itsmide)
+    shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    args:
+      creates: /usr/local/bin/composer
+
+  - name: Giving Composer Execution command  (Created by https://github.com/Itsmide)
+    shell: chmod +x /usr/local/bin/composer
+
+  - name: Install MySQL
+    apt:
+      name:
+       - libmysqlclient-dev
+       - mysql-server
+       - mysql-client
+      state: present
+
+  - name: Install Pip  (Created by https://github.com/Itsmide)
+    apt:
+      name: python3-pip
+      state: present
+
+  - name: Install PyMySQL
+    pip:
+      name: pymysql
+      state: present
+
+  - name: Start the MySQL service
+    action: service name=mysql state=started
+
+  - name: restart mysql  (Created by https://github.com/Itsmide)
+    service:
+      name: mysql
+      state: restarted
+
+
