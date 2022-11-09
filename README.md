@@ -2,7 +2,7 @@
 
 Created by https://github.com/Itsmide
 
-URL: itsmidealtschoolexamproject.live (IP in hosts)
+URL: https://itsmidealtschoolexamproject.live/ (IP in hosts)
 
 Perquisites for running this ansible-playbook on your remote machine
 
@@ -38,4 +38,4 @@ Also, bash script for installation of POSTGRESQL are added to last-setup.yml, wh
 
  
 Created by https://github.com/Itsmide
-URL: itsmidealtschoolexamproject.live (IP in hosts)
+URL: https://itsmidealtschoolexamproject.live/ (IP in hosts)
