@@ -1,4 +1,4 @@
-- hosts: webserver  (Created by https://github.com/Itsmide)
+- hosts: database  (Created by https://github.com/Itsmide)
   remote_user: root
   become: True
   vars_files:
